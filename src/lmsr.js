@@ -75,6 +75,8 @@ export function calcLMSRProfit () {
             },
         })
 
+    console.log('got', netOutcomeTokensSold)
+
     outcomeTokenCount = new Decimal(outcomeTokenCount.toString())
     let b = new Decimal(funding.toString()).dividedBy(new Decimal(netOutcomeTokensSold.length).ln())
 
@@ -173,4 +175,36 @@ export function calcLMSRMarginalPrice() {
             Decimal(0)
         )
     )
+}
+
+/**
+ * Estimates the cost of short-selling an outcome.
+ * @param {(Number[]|string[]|BigNumber[])} opts.netOutcomeTokensSold - Amounts of net outcome tokens that have been sold. Negative amount means more have been bought than sold.
+ * @param {(number|string|BigNumber)} opts.funding - The amount of funding market has
+ * @param {(number|string|BigNumber)} opts.outcomeTokenIndex - The index of the outcome
+ * @returns {Decimal} The cost of short-selling an outcome in event collateral tokens.
+ * @alias Gnosis.calcLMSRShortSellCost
+ */
+export function calcLMSRShortSellCost() {
+    let [[netOutcomeTokensSold, funding, outcomeTokenIndex, outcomeTokenCount, feeFactor]] =
+        normalizeWeb3Args(Array.from(arguments), {
+            methodName: 'calcLMSRShortSellCost',
+            functionInputs: [
+                { name: 'netOutcomeTokensSold', type: 'int256[]' },
+                { name: 'funding', type: 'uint256'},
+                { name: 'outcomeTokenIndex', type: 'uint8'},
+                { name: 'outcomeTokenCount', type: 'uint256' },
+                { name: 'feeFactor', type: 'uint24' },
+            ],
+        })
+
+    const profit = calcLMSRProfit({
+        netOutcomeTokensSold: netOutcomeTokensSold.map((quantity) => Decimal(quantity).plus(outcomeTokenCount)),
+        funding,
+        outcomeTokenIndex,
+        outcomeTokenCount,
+        feeFactor,
+    })
+
+    return Decimal(outcomeTokenCount).minus(profit)
 }

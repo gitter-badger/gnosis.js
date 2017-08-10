@@ -361,6 +361,29 @@ describe('Gnosis', function () {
             assert.equal(balanceAfter.sub(balanceBefore).valueOf(), winnings.valueOf())
         })
 
+        it.only('does short-selling of outcomes', async () => {
+            let outcomeTokenIndex = 0
+            let outcomeTokenCount = 2e18
+
+            const baseProfit = await gnosis.lmsrMarketMaker.calcProfit(market.address, outcomeTokenIndex, outcomeTokenCount)
+            const fee = await market.calcMarketFee(baseProfit)
+
+            // let localCalculatedCost = Gnosis.calcLMSRShortSellCost({
+            //     netOutcomeTokensSold,
+            //     funding,
+            //     outcomeTokenIndex,
+            //     outcomeTokenCount,
+            //     feeFactor,
+            // })
+
+            requireEventFromTXResult(await gnosis.etherToken.deposit({ value: fee.plus(outcomeTokenCount) }), 'Deposit')
+            await gnosis.shortSellOutcomeTokens({
+                market,
+                outcomeTokenIndex,
+                outcomeTokenCount,
+            })
+        })
+
         it('accepts strings for outcome token index', async () => {
             let outcomeTokenIndex = 0
             let outcomeTokenCount = 1000000000

@@ -1,7 +1,10 @@
+import _ from 'lodash'
+
 import {
     normalizeWeb3Args, wrapWeb3Function,
     requireEventFromTXResult, sendTransactionAndGetResult
 } from './utils'
+import { calcLMSRShortSellCost } from './lmsr'
 
 /**
  * Creates a market.
@@ -114,4 +117,52 @@ export async function sellOutcomeTokens() {
         eventName: 'OutcomeTokenSale',
         eventArgName: 'profit',
     })
+}
+
+/**
+ * Short sells outcome tokens. If you have ether and plan on transacting with a market on an event which
+ * uses EtherToken as collateral, be sure to convert the ether into EtherToken by sending ether to
+ * the deposit() method of the contract. For other ERC20 collateral tokens, follow the token's
+ * acquisition process defined by the token's contract.
+ *
+ * Note: this method is asynchronous and will return a Promise
+ *
+ * @param {(Contract|string)} opts.market - The market to short sell tokens from
+ * @param {(number|string|BigNumber)} opts.outcomeTokenIndex - The index of the outcome to short sell
+ * @param {(number|string|BigNumber)} opts.outcomeTokenCount - Number of outcome tokens to short sell
+ * @returns {BigNumber} How much collateral tokens caller paid for short-sale
+ * @alias Gnosis#shortSellOutcomeTokens
+ */
+export async function shortSellOutcomeTokens() {
+    const [[marketAddress, outcomeTokenIndex, outcomeTokenCount]] =
+        normalizeWeb3Args(Array.from(arguments), {
+            methodName: 'shortSellOutcomeTokens',
+            functionInputs: [
+                { name: 'market', type: 'address' },
+                { name: 'outcomeTokenIndex', type: 'uint8'},
+                { name: 'outcomeTokenCount', type: 'uint256'},
+            ]
+        })
+
+    const market = this.contracts.Market.at(marketAddress)
+    const collateralToken = this.contracts.Token.at(
+        await this.contracts.Event.at(
+            await market.eventContract()
+        ).collateralToken()
+    )
+    const baseProfit = await this.lmsrMarketMaker.calcProfit(marketAddress, outcomeTokenIndex, outcomeTokenCount)
+    const fee = await market.calcMarketFee(baseProfit)
+
+    console.log(requireEventFromTXResult(await collateralToken.approve(marketAddress, 2 * outcomeTokenCount), 'Approval'))
+
+    const opts = ({
+        callerContract: market,
+        methodName: 'shortSell',
+        methodArgs: [outcomeTokenIndex, outcomeTokenCount, 0],
+        eventName: 'OutcomeTokenShortSale',
+        eventArgName: 'cost',
+    })
+
+    console.log(opts)
+    // return await sendTransactionAndGetResult(opts)
 }

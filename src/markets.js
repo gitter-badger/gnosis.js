@@ -4,7 +4,6 @@ import {
     normalizeWeb3Args, wrapWeb3Function,
     requireEventFromTXResult, sendTransactionAndGetResult
 } from './utils'
-import { calcLMSRShortSellCost } from './lmsr'
 
 /**
  * Creates a market.
@@ -150,10 +149,6 @@ export async function shortSellOutcomeTokens() {
             await market.eventContract()
         ).collateralToken()
     )
-    const baseProfit = await this.lmsrMarketMaker.calcProfit(marketAddress, outcomeTokenIndex, outcomeTokenCount)
-    const fee = await market.calcMarketFee(baseProfit)
-
-    console.log(requireEventFromTXResult(await collateralToken.approve(marketAddress, 2 * outcomeTokenCount), 'Approval'))
 
     const opts = ({
         callerContract: market,
@@ -163,6 +158,6 @@ export async function shortSellOutcomeTokens() {
         eventArgName: 'cost',
     })
 
-    console.log(opts)
-    // return await sendTransactionAndGetResult(opts)
+    console.log(_.omit(opts, 'callerContract'))
+    return await sendTransactionAndGetResult(opts)
 }

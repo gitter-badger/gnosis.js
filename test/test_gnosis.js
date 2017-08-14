@@ -365,18 +365,7 @@ describe('Gnosis', function () {
             let outcomeTokenIndex = 0
             let outcomeTokenCount = 2e18
 
-            const baseProfit = await gnosis.lmsrMarketMaker.calcProfit(market.address, outcomeTokenIndex, outcomeTokenCount)
-            const fee = await market.calcMarketFee(baseProfit)
-
-            // let localCalculatedCost = Gnosis.calcLMSRShortSellCost({
-            //     netOutcomeTokensSold,
-            //     funding,
-            //     outcomeTokenIndex,
-            //     outcomeTokenCount,
-            //     feeFactor,
-            // })
-
-            requireEventFromTXResult(await gnosis.etherToken.deposit({ value: fee.plus(outcomeTokenCount) }), 'Deposit')
+            requireEventFromTXResult(await gnosis.etherToken.deposit({ value: outcomeTokenCount }), 'Deposit')
             await gnosis.shortSellOutcomeTokens({
                 market,
                 outcomeTokenIndex,

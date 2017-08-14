@@ -150,14 +150,11 @@ export async function shortSellOutcomeTokens() {
         ).collateralToken()
     )
 
-    const opts = ({
+    return await sendTransactionAndGetResult({
         callerContract: market,
         methodName: 'shortSell',
         methodArgs: [outcomeTokenIndex, outcomeTokenCount, 0],
         eventName: 'OutcomeTokenShortSale',
         eventArgName: 'cost',
     })
-
-    console.log(_.omit(opts, 'callerContract'))
-    return await sendTransactionAndGetResult(opts)
 }

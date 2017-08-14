@@ -361,7 +361,7 @@ describe('Gnosis', function () {
             assert.equal(balanceAfter.sub(balanceBefore).valueOf(), winnings.valueOf())
         })
 
-        it.only('does short-selling of outcomes', async () => {
+        it('does short-selling of outcomes', async () => {
             let outcomeTokenIndex = 0
             let outcomeTokenCount = 2e18
 

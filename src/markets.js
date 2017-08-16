@@ -149,6 +149,10 @@ export async function shortSellOutcomeTokens() {
             await market.eventContract()
         ).collateralToken()
     )
+    // const baseProfit = await this.lmsrMarketMaker.calcProfit(marketAddress, outcomeTokenIndex, outcomeTokenCount)
+    // const minProfit = baseProfit.sub(await market.calcMarketFee(baseProfit))
+
+    requireEventFromTXResult(await collateralToken.approve(marketAddress, outcomeTokenCount), 'Approval')
 
     return await sendTransactionAndGetResult({
         callerContract: market,
